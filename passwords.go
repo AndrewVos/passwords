@@ -39,10 +39,11 @@ func matchNextCredential(credentials []Credential) {
 
 			for i, name := range names {
 				setCursorPosition(i+2, 1)
+				name = colouriseMatchInString(query, name)
 				if i == 0 {
-					fmt.Printf(colour.Green("=> %v"), name)
+					fmt.Printf(colour.Green("=>")+" %v", name)
 				} else {
-					fmt.Printf(colour.Blue(name))
+					fmt.Printf(name)
 				}
 			}
 			setCursorPosition(1, len(query)+1)
@@ -69,6 +70,16 @@ func matchNextCredential(credentials []Credential) {
 			}
 		}
 	}
+}
+
+func colouriseMatchInString(query string, match string) string {
+	query = strings.ToLower(query)
+	match = strings.ToLower(match)
+	parts := strings.Split(match, query)
+	for i, part := range parts {
+		parts[i] = colour.Blue(part)
+	}
+	return strings.Join(parts, colour.Red(query))
 }
 
 func displayCredential(credential Credential) {
