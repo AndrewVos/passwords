@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/AndrewVos/colour"
 	"log"
 	"os"
 	"os/exec"
@@ -39,9 +40,10 @@ func matchNextCredential(credentials []Credential) {
 			for i, name := range names {
 				setCursorPosition(i+2, 1)
 				if i == 0 {
-					fmt.Printf("=> ")
+					fmt.Printf(colour.Green("=> %v"), name)
+				} else {
+					fmt.Printf(colour.Blue(name))
 				}
-				fmt.Printf("%v", name)
 			}
 			setCursorPosition(1, len(query)+1)
 		}
@@ -58,19 +60,25 @@ func matchNextCredential(credentials []Credential) {
 		} else if b == 10 {
 			clearScreen()
 			setCursorPosition(1, 1)
-			fmt.Println("p = copy password to clipboard")
-			fmt.Println("u = copy username to clipboard")
-			fmt.Println("<enter> = to go back to search")
+			match := matches[0]
+			fmt.Printf("Name:     %v\n", match.Name)
+			fmt.Printf("Site:     %v\n", match.Site)
+			fmt.Printf("Username: %v\n", match.Username)
+			fmt.Printf("Password: %v\n", match.Password)
+			fmt.Println()
+			fmt.Println(colour.Blue("p = copy password to clipboard"))
+			fmt.Println(colour.Blue("u = copy username to clipboard"))
+			fmt.Println(colour.Blue("<enter> = to go back to search"))
 			for {
 				b = waitForNextByteFromStdin()
 				if b == 10 {
 					return
 				} else if string(b) == "u" {
 					copyToClipboard(matches[0].Username)
-					fmt.Println("Copied username to clipboard")
+					fmt.Println(colour.Yellow("Copied username to clipboard"))
 				} else if string(b) == "p" {
 					copyToClipboard(matches[0].Password)
-					fmt.Println("Copied password to clipboard")
+					fmt.Println(colour.Yellow("Copied password to clipboard"))
 				}
 			}
 		} else {
