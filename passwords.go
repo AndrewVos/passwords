@@ -62,7 +62,7 @@ func matchNextCredential(credentials []Credential) {
 			displayCredential(matches[0])
 			return
 		} else {
-			matched, _ := regexp.MatchString("[a-zA-Z _\\-]", string(b))
+			matched, _ := regexp.MatchString("[0-9A-Za-z_\\-. ]", string(b))
 			if matched {
 				query = query + string(b)
 				matches = search(query, credentials)
