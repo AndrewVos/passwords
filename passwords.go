@@ -33,7 +33,7 @@ func matchNextCredential(credentials []Credential) {
 		} else {
 			names := []string{}
 			for _, credential := range matches {
-				names = append(names, credential.Name)
+				names = append(names, credential.SearchableContent)
 			}
 			fmt.Printf("%v", query)
 
@@ -43,7 +43,7 @@ func matchNextCredential(credentials []Credential) {
 				if i == 0 {
 					fmt.Printf(colour.Green("=>")+" %v", name)
 				} else {
-					fmt.Printf(name)
+					fmt.Printf("%v", name)
 				}
 			}
 			setCursorPosition(1, len(query)+1)
@@ -59,8 +59,10 @@ func matchNextCredential(credentials []Credential) {
 			matches = search(query, credentials)
 			printQuery()
 		} else if b == 10 {
-			displayCredential(matches[0])
-			return
+			if len(matches) > 0 {
+				displayCredential(matches[0])
+				return
+			}
 		} else {
 			matched, _ := regexp.MatchString("[0-9A-Za-z_\\-. ]", string(b))
 			if matched {
@@ -121,7 +123,7 @@ func search(query string, credentials []Credential) []Credential {
 	}
 	matches := []Credential{}
 	for _, credential := range credentials {
-		if strings.Contains(strings.ToLower(credential.Name), strings.ToLower(query)) {
+		if strings.Contains(strings.ToLower(credential.SearchableContent), strings.ToLower(query)) {
 			matches = append(matches, credential)
 		}
 	}
@@ -144,10 +146,11 @@ func main() {
 }
 
 type Credential struct {
-	Name     string
-	Site     string
-	Username string
-	Password string
+	SearchableContent string
+	Name              string
+	Site              string
+	Username          string
+	Password          string
 }
 
 func decrypt() []Credential {
@@ -158,23 +161,36 @@ func decrypt() []Credential {
 	lines := strings.Split(string(output), "\n\n")
 	credentials := []Credential{}
 	for _, line := range lines {
-		credential := Credential{}
+		name := ""
+		site := ""
+		user := ""
+		pass := ""
 		parts := strings.Split(line, "\n")
 		for _, part := range parts {
 			if strings.HasPrefix(part, "a:") {
-				credential.Name = strings.Replace(part, "a: ", "", 1)
+				name = strings.Replace(part, "a: ", "", 1)
 			}
 			if strings.HasPrefix(part, "s:") {
-				credential.Site = strings.Replace(part, "s: ", "", 1)
+				site = strings.Replace(part, "s: ", "", 1)
 			}
 			if strings.HasPrefix(part, "u:") {
-				credential.Username = strings.Replace(part, "u: ", "", 1)
+				user = strings.Replace(part, "u: ", "", 1)
 			}
 			if strings.HasPrefix(part, "p:") {
-				credential.Password = strings.Replace(part, "p: ", "", 1)
+				pass = strings.Replace(part, "p: ", "", 1)
 			}
 		}
-		credentials = append(credentials, credential)
+		credentials = append(credentials, NewCredential(name, site, user, pass))
 	}
 	return credentials
+}
+
+func NewCredential(name string, site string, username string, password string) Credential {
+	return Credential{
+		Name:              name,
+		Site:              site,
+		Username:          username,
+		Password:          password,
+		SearchableContent: fmt.Sprintf("%v (%v)", name, site),
+	}
 }
