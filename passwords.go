@@ -58,29 +58,8 @@ func matchNextCredential(credentials []Credential) {
 			matches = search(query, credentials)
 			printQuery()
 		} else if b == 10 {
-			clearScreen()
-			setCursorPosition(1, 1)
-			match := matches[0]
-			fmt.Printf("Name:     %v\n", match.Name)
-			fmt.Printf("Site:     %v\n", match.Site)
-			fmt.Printf("Username: %v\n", match.Username)
-			fmt.Printf("Password: %v\n", match.Password)
-			fmt.Println()
-			fmt.Println(colour.Blue("p = copy password to clipboard"))
-			fmt.Println(colour.Blue("u = copy username to clipboard"))
-			fmt.Println(colour.Blue("<enter> = to go back to search"))
-			for {
-				b = waitForNextByteFromStdin()
-				if b == 10 {
-					return
-				} else if string(b) == "u" {
-					copyToClipboard(matches[0].Username)
-					fmt.Println(colour.Yellow("Copied username to clipboard"))
-				} else if string(b) == "p" {
-					copyToClipboard(matches[0].Password)
-					fmt.Println(colour.Yellow("Copied password to clipboard"))
-				}
-			}
+			displayCredential(matches[0])
+			return
 		} else {
 			matched, _ := regexp.MatchString("[a-zA-Z _\\-]", string(b))
 			if matched {
@@ -88,6 +67,31 @@ func matchNextCredential(credentials []Credential) {
 				matches = search(query, credentials)
 				printQuery()
 			}
+		}
+	}
+}
+
+func displayCredential(credential Credential) {
+	clearScreen()
+	setCursorPosition(1, 1)
+	fmt.Printf("Name:     %v\n", credential.Name)
+	fmt.Printf("Site:     %v\n", credential.Site)
+	fmt.Printf("Username: %v\n", credential.Username)
+	fmt.Printf("Password: %v\n", credential.Password)
+	fmt.Println()
+	fmt.Println(colour.Blue("p = copy password to clipboard"))
+	fmt.Println(colour.Blue("u = copy username to clipboard"))
+	fmt.Println(colour.Blue("<enter> = to go back to search"))
+	for {
+		b := waitForNextByteFromStdin()
+		if b == 10 {
+			break
+		} else if string(b) == "u" {
+			copyToClipboard(credential.Username)
+			fmt.Println(colour.Yellow("Copied username to clipboard"))
+		} else if string(b) == "p" {
+			copyToClipboard(credential.Password)
+			fmt.Println(colour.Yellow("Copied password to clipboard"))
 		}
 	}
 }
