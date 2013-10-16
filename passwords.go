@@ -41,31 +41,6 @@ func matchNextCredential(credentials []Credential) {
 	SetCursorPosition(1, 1)
 	fmt.Printf("Start typing...")
 
-	printQuery := func() {
-		ClearScreen()
-		SetCursorPosition(1, 1)
-		if matches == nil {
-			fmt.Printf("%v", query)
-		} else {
-			names := []string{}
-			for _, credential := range matches {
-				names = append(names, credential.SearchableContent)
-			}
-			fmt.Printf("%v", query)
-
-			for i, name := range names {
-				SetCursorPosition(i+2, 1)
-				name = colouriseMatchInString(query, name)
-				if i == 0 {
-					fmt.Printf(colour.Green("=>")+" %v", name)
-				} else {
-					fmt.Printf("%v", name)
-				}
-			}
-			SetCursorPosition(1, len(query)+1)
-		}
-	}
-
 	for {
 		b := WaitForNextByteFromStdin()
 		if b == 127 {
@@ -73,7 +48,7 @@ func matchNextCredential(credentials []Credential) {
 				query = query[:len(query)-1]
 			}
 			matches = search(query, credentials)
-			printQuery()
+			printQuery(query, matches)
 		} else if b == 10 {
 			if len(matches) > 0 {
 				displayCredential(matches[0])
@@ -84,9 +59,34 @@ func matchNextCredential(credentials []Credential) {
 			if matched {
 				query = query + string(b)
 				matches = search(query, credentials)
-				printQuery()
+				printQuery(query, matches)
 			}
 		}
+	}
+}
+
+func printQuery(query string, matches []Credential) {
+	ClearScreen()
+	SetCursorPosition(1, 1)
+	if matches == nil {
+		fmt.Printf("%v", query)
+	} else {
+		names := []string{}
+		for _, credential := range matches {
+			names = append(names, credential.SearchableContent)
+		}
+		fmt.Printf("%v", query)
+
+		for i, name := range names {
+			SetCursorPosition(i+2, 1)
+			name = colouriseMatchInString(query, name)
+			if i == 0 {
+				fmt.Printf(colour.Green("=>")+" %v", name)
+			} else {
+				fmt.Printf("%v", name)
+			}
+		}
+		SetCursorPosition(1, len(query)+1)
 	}
 }
 
