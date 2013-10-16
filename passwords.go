@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/AndrewVos/colour"
-	"log"
 	"os"
 	"os/exec"
 	"regexp"
@@ -11,12 +10,25 @@ import (
 	"strings"
 )
 
+var filename string
+
+func init() {
+	if len(os.Args) != 2 {
+		fmt.Println("Usage: passwords <file>")
+		os.Exit(1)
+	} else {
+		filename = os.Args[1]
+	}
+}
+
 func clearScreen() {
 	fmt.Printf("\x1b[2J")
 }
+
 func setCursorPosition(line int, column int) {
 	fmt.Printf("\x1b[" + strconv.Itoa(line) + ";" + strconv.Itoa(column) + "H")
 }
+
 func matchNextCredential(credentials []Credential) {
 	query := ""
 	matches := []Credential{}
@@ -137,7 +149,11 @@ func waitForNextByteFromStdin() byte {
 }
 
 func main() {
-	credentials := decrypt()
+	credentials, err := decrypt()
+	if err != nil {
+		fmt.Println("Error decrypting file...")
+		return
+	}
 	exec.Command("stty", "-F", "/dev/tty", "cbreak", "min", "1").Run()
 	exec.Command("stty", "-F", "/dev/tty", "-echo").Run()
 	for {
@@ -153,10 +169,10 @@ type Credential struct {
 	Password          string
 }
 
-func decrypt() []Credential {
-	output, err := exec.Command("/usr/bin/gpg", "--decrypt", "").Output()
+func decrypt() ([]Credential, error) {
+	output, err := exec.Command("/usr/bin/gpg", "--decrypt", filename).Output()
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	lines := strings.Split(string(output), "\n\n")
 	credentials := []Credential{}
@@ -182,7 +198,7 @@ func decrypt() []Credential {
 		}
 		credentials = append(credentials, NewCredential(name, site, user, pass))
 	}
-	return credentials
+	return credentials, nil
 }
 
 func NewCredential(name string, site string, username string, password string) Credential {
