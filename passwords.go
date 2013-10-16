@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
-	"strconv"
 	"strings"
 )
 
@@ -34,25 +33,17 @@ func main() {
 	}
 }
 
-func clearScreen() {
-	fmt.Printf("\x1b[2J")
-}
-
-func setCursorPosition(line int, column int) {
-	fmt.Printf("\x1b[" + strconv.Itoa(line) + ";" + strconv.Itoa(column) + "H")
-}
-
 func matchNextCredential(credentials []Credential) {
 	query := ""
 	matches := []Credential{}
 
-	clearScreen()
-	setCursorPosition(1, 1)
+	ClearScreen()
+	SetCursorPosition(1, 1)
 	fmt.Printf("Start typing...")
 
 	printQuery := func() {
-		clearScreen()
-		setCursorPosition(1, 1)
+		ClearScreen()
+		SetCursorPosition(1, 1)
 		if matches == nil {
 			fmt.Printf("%v", query)
 		} else {
@@ -63,7 +54,7 @@ func matchNextCredential(credentials []Credential) {
 			fmt.Printf("%v", query)
 
 			for i, name := range names {
-				setCursorPosition(i+2, 1)
+				SetCursorPosition(i+2, 1)
 				name = colouriseMatchInString(query, name)
 				if i == 0 {
 					fmt.Printf(colour.Green("=>")+" %v", name)
@@ -71,12 +62,12 @@ func matchNextCredential(credentials []Credential) {
 					fmt.Printf("%v", name)
 				}
 			}
-			setCursorPosition(1, len(query)+1)
+			SetCursorPosition(1, len(query)+1)
 		}
 	}
 
 	for {
-		b := waitForNextByteFromStdin()
+		b := WaitForNextByteFromStdin()
 		if b == 127 {
 			if query != "" {
 				query = query[:len(query)-1]
@@ -110,8 +101,8 @@ func colouriseMatchInString(query string, match string) string {
 }
 
 func displayCredential(credential Credential) {
-	clearScreen()
-	setCursorPosition(1, 1)
+	ClearScreen()
+	SetCursorPosition(1, 1)
 	fmt.Printf("Name:     %v\n", credential.Name)
 	fmt.Printf("Site:     %v\n", credential.Site)
 	fmt.Printf("Username: %v\n", credential.Username)
@@ -121,7 +112,7 @@ func displayCredential(credential Credential) {
 	fmt.Println(colour.Blue("u = copy username to clipboard"))
 	fmt.Println(colour.Blue("<enter> = to go back to search"))
 	for {
-		b := waitForNextByteFromStdin()
+		b := WaitForNextByteFromStdin()
 		if b == 10 {
 			break
 		} else if string(b) == "u" {
@@ -153,12 +144,6 @@ func search(query string, credentials []Credential) []Credential {
 		}
 	}
 	return matches
-}
-
-func waitForNextByteFromStdin() byte {
-	var b []byte = make([]byte, 1)
-	os.Stdin.Read(b)
-	return b[0]
 }
 
 func decrypt() ([]Credential, error) {
