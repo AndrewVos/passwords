@@ -11,26 +11,26 @@ import (
 
 func matchNextCredential(credentials []Credential) {
 	query := ""
-	lastLinePrinted := 0
 	matches := []Credential{}
 
 	printQuery := func() {
+		fmt.Printf("\x1b[2K")
 		fmt.Printf("\r")
-		for i := 0; i <= lastLinePrinted; i++ {
-			fmt.Printf(" ")
-		}
-		fmt.Printf("\r")
-		line := query
-		if matches != nil {
+		if matches == nil {
+			fmt.Printf("%v", query)
+		} else {
 			names := []string{}
 			for _, credential := range matches {
 				names = append(names, credential.Name)
+				if len(names) == 3 {
+					break
+				}
 			}
-			// line = fmt.Sprintf("%v => [%v]", query, strings.Join(names, ","))
-			line = fmt.Sprintf("%v => [%v]", query, matches[0].Name)
+			fmt.Printf("%v", query)
+			fmt.Printf("\x1b[s")
+			fmt.Printf(" => [%v]", strings.Join(names, ","))
+			fmt.Printf("\x1b[u")
 		}
-		lastLinePrinted = len(line)
-		fmt.Printf("%v", line)
 	}
 
 	for {
