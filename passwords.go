@@ -6,30 +6,44 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
+func clearScreen() {
+	fmt.Printf("\x1b[2J")
+}
+func setCursorPosition(line int, column int) {
+	fmt.Printf("\x1b[" + strconv.Itoa(line) + ";" + strconv.Itoa(column) + "H")
+}
 func matchNextCredential(credentials []Credential) {
 	query := ""
 	matches := []Credential{}
 
+	clearScreen()
+	setCursorPosition(1, 1)
+	fmt.Printf("Start typing...")
+
 	printQuery := func() {
-		fmt.Printf("\x1b[2K")
-		fmt.Printf("\r")
+		clearScreen()
+		setCursorPosition(1, 1)
 		if matches == nil {
 			fmt.Printf("%v", query)
 		} else {
 			names := []string{}
 			for _, credential := range matches {
 				names = append(names, credential.Name)
-				if len(names) == 3 {
-					break
-				}
 			}
 			fmt.Printf("%v", query)
-			fmt.Printf("\x1b[s")
-			fmt.Printf(" => [%v]", strings.Join(names, ","))
-			fmt.Printf("\x1b[u")
+
+			for i, name := range names {
+				setCursorPosition(i+2, 1)
+				if i == 0 {
+					fmt.Printf("=> ")
+				}
+				fmt.Printf("%v", name)
+			}
+			setCursorPosition(1, len(query)+1)
 		}
 	}
 
@@ -42,8 +56,11 @@ func matchNextCredential(credentials []Credential) {
 			matches = search(query, credentials)
 			printQuery()
 		} else if b == 10 {
+			clearScreen()
+			setCursorPosition(1, 1)
 			fmt.Println("p = copy password to clipboard")
 			fmt.Println("u = copy username to clipboard")
+			fmt.Println("<enter> = to go back to search")
 			for {
 				b = waitForNextByteFromStdin()
 				if b == 10 {
@@ -70,12 +87,15 @@ func matchNextCredential(credentials []Credential) {
 func copyToClipboard(s string) {
 	xclip := exec.Command("/usr/bin/xclip", "-selection", "clipboard")
 	w, _ := xclip.StdinPipe()
-	fmt.Println(xclip.Start())
+	xclip.Start()
 	w.Write([]byte(s))
 	w.Close()
 }
 
 func search(query string, credentials []Credential) []Credential {
+	if query == "" {
+		return credentials
+	}
 	matches := []Credential{}
 	for _, credential := range credentials {
 		if strings.Contains(strings.ToLower(credential.Name), strings.ToLower(query)) {
