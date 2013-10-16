@@ -21,6 +21,19 @@ func init() {
 	}
 }
 
+func main() {
+	credentials, err := decrypt()
+	if err != nil {
+		fmt.Println("Error decrypting file...")
+		return
+	}
+	exec.Command("stty", "-F", "/dev/tty", "cbreak", "min", "1").Run()
+	exec.Command("stty", "-F", "/dev/tty", "-echo").Run()
+	for {
+		matchNextCredential(credentials)
+	}
+}
+
 func clearScreen() {
 	fmt.Printf("\x1b[2J")
 }
@@ -148,27 +161,6 @@ func waitForNextByteFromStdin() byte {
 	return b[0]
 }
 
-func main() {
-	credentials, err := decrypt()
-	if err != nil {
-		fmt.Println("Error decrypting file...")
-		return
-	}
-	exec.Command("stty", "-F", "/dev/tty", "cbreak", "min", "1").Run()
-	exec.Command("stty", "-F", "/dev/tty", "-echo").Run()
-	for {
-		matchNextCredential(credentials)
-	}
-}
-
-type Credential struct {
-	SearchableContent string
-	Name              string
-	Site              string
-	Username          string
-	Password          string
-}
-
 func decrypt() ([]Credential, error) {
 	output, err := exec.Command("/usr/bin/gpg", "--decrypt", filename).Output()
 	if err != nil {
@@ -199,14 +191,4 @@ func decrypt() ([]Credential, error) {
 		credentials = append(credentials, NewCredential(name, site, user, pass))
 	}
 	return credentials, nil
-}
-
-func NewCredential(name string, site string, username string, password string) Credential {
-	return Credential{
-		Name:              name,
-		Site:              site,
-		Username:          username,
-		Password:          password,
-		SearchableContent: fmt.Sprintf("%v (%v)", name, site),
-	}
 }
