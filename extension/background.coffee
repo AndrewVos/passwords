@@ -43,5 +43,22 @@ $("form").submit (e) ->
   if $(e.target).find("input[type='password']").length >= 1
     hash = $(e.target).serializeHash()
     hash["site"] = site()
-    url = "http://localhost:8080/store"
-    $.post url, hash
+    chrome.storage.local.set({'lastFormSubmitted': hash})
+
+chrome.storage.local.get "lastFormSubmitted", (items) ->
+  if items.lastFormSubmitted
+    popup = '
+      <div id="passwords-flash" style="position: absolute; width: 100%; height: 20px; top: 0; background-color: lightgray; border: 1px solid black;">
+      Want to store this password? <input id="passwords-yes" type="submit" value="yeah"><input id="passwords-no" type="submit" value="nope">
+      </div>
+    '
+    $("body").append($(popup))
+
+    $(document).on "click", "#passwords-yes", ->
+      url = "http://localhost:8080/store"
+      $.post url, items.lastFormSubmitted, ->
+        chrome.storage.local.remove "lastFormSubmitted"
+        $("#passwords-flash").hide()
+    $(document).on "click", "#passwords-no", ->
+      chrome.storage.local.remove "lastFormSubmitted"
+      $("#passwords-flash").hide()

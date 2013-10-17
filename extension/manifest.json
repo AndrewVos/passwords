@@ -3,7 +3,7 @@
   "name": "passwords",
   "description": "",
   "version": "0.1",
-  "permissions": [ "contextMenus", "tabs", "clipboardWrite", "unlimitedStorage", "http://*/*", "https://*/*" ],
+  "permissions": [ "contextMenus", "tabs", "clipboardWrite", "storage", "unlimitedStorage", "http://*/*", "https://*/*" ],
   "content_scripts": [
     {
       "all_frames": true,
