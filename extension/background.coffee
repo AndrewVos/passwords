@@ -1,5 +1,5 @@
 fill = ->
-  url = "http://localhost:8080/?q=" + encodeURIComponent(host())
+  url = "http://localhost:8080/search/?q=" + encodeURIComponent(site())
   $.getJSON url, (data) ->
     fillUsername(data.Username)
     fillPassword(data.Password)
@@ -26,7 +26,7 @@ tryFillIn = (fields, value) ->
         if element.attr("name") == field
           element.attr "value", value
 
-host = ->
+site = ->
   if !window.location.origin
     window.location.origin = window.location.protocol+"//"+window.location.host
   window.location.origin
@@ -38,3 +38,10 @@ Mousetrap.bindGlobal 'ctrl+\\', (e) ->
 Mousetrap.bindGlobal 'cmd+\\', (e) ->
   fill()
   false
+
+$("form").submit (e) ->
+  if $(e.target).find("input[type='password']").length >= 1
+    hash = $(e.target).serializeHash()
+    hash["site"] = site()
+    url = "http://localhost:8080/store"
+    $.post url, hash
