@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/AndrewVos/colour"
+	"net/http"
 	"os"
 	"os/exec"
 	"regexp"
@@ -20,8 +22,31 @@ func init() {
 	}
 }
 
+func launchServer() {
+	go func() {
+		http.HandleFunc("/", searchHandler)
+		http.ListenAndServe(":8080", nil)
+	}()
+}
+
+func searchHandler(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query().Get("q")
+	for _, credential := range credentials {
+		if strings.HasPrefix(credential.Site, query) {
+			b, _ := json.Marshal(credential)
+			w.Write(b)
+			return
+		}
+	}
+}
+
+var credentials []Credential
+
 func main() {
-	credentials, err := decrypt()
+	c, err := decrypt()
+	credentials = c
+	launchServer()
+
 	if err != nil {
 		fmt.Println("Error decrypting file...")
 		return
