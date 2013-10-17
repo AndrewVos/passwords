@@ -9,9 +9,9 @@
       "all_frames": true,
       "js": [
         "jquery-2.0.3.min.js",
+        "jquery.serialize-hash.js",
         "mousetrap.min.js",
         "mousetrap-global-bind.min.js",
-        "jquery.serialize-hash.js",
         "background.js"
       ],
       "matches": [ "http://*/*", "https://*/*" ],
@@ -24,5 +24,3 @@
     "default_popup": "popup.html"
   }
 }
-
-
