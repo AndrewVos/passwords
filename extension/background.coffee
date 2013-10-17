@@ -1,4 +1,7 @@
+filledPassword = false
+
 fill = ->
+  self.filledPassword = true
   url = "http://localhost:8080/search/?q=" + encodeURIComponent(site())
   $.getJSON url, (data) ->
     fillUsername(data.Username)
@@ -40,6 +43,7 @@ Mousetrap.bindGlobal 'cmd+\\', (e) ->
   false
 
 $("form").submit (e) ->
+  return if self.filledPassword
   if $(e.target).find("input[type='password']").length >= 1
     hash = $(e.target).serializeHash()
     hash["site"] = site()
