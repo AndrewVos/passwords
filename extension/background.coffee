@@ -47,18 +47,41 @@ $("form").submit (e) ->
 
 chrome.storage.local.get "lastFormSubmitted", (items) ->
   if items.lastFormSubmitted && items.lastFormSubmitted.site == site()
+    iframe = '
+      <iframe id="passwords-frame" srcdoc="" allowtransparency="true" scrolling="no" style="position: absolute; z-index:99999999; border: 0; width: 100%; height: 50px; top: 0;">
+      </iframe>
+    '
     popup = '
-      <div id="passwords-flash" style="position: absolute; z-index:99999999; width: 100%; height: 20px; top: 0; background-color: lightgray; border: 1px solid black;">
-      Want to store this password? <input id="passwords-yes" type="submit" value="yeah"><input id="passwords-no" type="submit" value="nope">
+      <div id="passwords-flash" style="
+        position: relative;
+        top: 0;
+        left: 0;
+        width: 99%;
+        height: 100%;
+        border-radius: 5px;
+        background-color: lightgray;
+        padding: 5px;
+        margin-left: auto;
+        margin-right: auto;
+        ">
+      Want to store this password?
+      <input id="passwords-yes" type="submit" value="yeah">
+      <input id="passwords-no" type="submit" value="nope">
       </div>
     '
-    $("body").append($(popup))
+    $("body").append($(iframe))
+    frame = $("#passwords-frame")
+    frame.attr("srcdoc", popup)
 
-    $(document).on "click", "#passwords-yes", ->
+    clickYes = ->
       url = "http://localhost:8080/store"
       $.post url, items.lastFormSubmitted, ->
         chrome.storage.local.remove "lastFormSubmitted"
-        $("#passwords-flash").hide()
-    $(document).on "click", "#passwords-no", ->
+        $("#passwords-frame").hide()
+    clickNo = ->
       chrome.storage.local.remove "lastFormSubmitted"
-      $("#passwords-flash").hide()
+      $("#passwords-frame").hide()
+
+    frame.load ->
+      frame.contents().find("#passwords-yes").click clickYes
+      frame.contents().find("#passwords-no").click clickNo
