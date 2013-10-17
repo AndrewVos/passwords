@@ -46,9 +46,9 @@ $("form").submit (e) ->
     chrome.storage.local.set({'lastFormSubmitted': hash})
 
 chrome.storage.local.get "lastFormSubmitted", (items) ->
-  if items.lastFormSubmitted
+  if items.lastFormSubmitted && items.lastFormSubmitted.site == site()
     popup = '
-      <div id="passwords-flash" style="position: absolute; width: 100%; height: 20px; top: 0; background-color: lightgray; border: 1px solid black;">
+      <div id="passwords-flash" style="position: absolute; z-index:99999999; width: 100%; height: 20px; top: 0; background-color: lightgray; border: 1px solid black;">
       Want to store this password? <input id="passwords-yes" type="submit" value="yeah"><input id="passwords-no" type="submit" value="nope">
       </div>
     '
