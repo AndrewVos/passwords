@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+  <head>
+    <script src="jquery-2.0.3.min.js"></script>
+    <script src="options.js"></script>
+  </head>
+  <body>
+    <h1>Passwords</h1>
+    <div id="create-passwords-file">
+      <p>Create your passwords file now.</p>
+      <form method="POST" action="http://localhost:8080/create_passwords_file">
+        <div>
+          <input type="password" id="password" name="password"></input>
+        </div>
+        <div>
+          <input type="password" id="confirm_password" name="confirm_password"></input>
+        </div>
+        <div>
+          <input type="submit" id="save"></input>
+        </div>
+      </form>
+    </div>
+  </body>
+</html>

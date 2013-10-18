@@ -4,12 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 )
 
 var credentials []Credential
 
 func main() {
+	http.HandleFunc("/create_passwords_file", createPasswordsFileHandler)
+	http.HandleFunc("/passwords_file_exists/", passwordsFileExistsHandler)
 	http.HandleFunc("/search/", searchHandler)
 	http.HandleFunc("/store", storeHandler)
 	http.ListenAndServe(":8080", nil)
@@ -24,6 +27,21 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+}
+
+func passwordsFileExistsHandler(w http.ResponseWriter, r *http.Request) {
+	response := map[string]interface{}{}
+	if _, err := os.Stat("passwords_file"); err == nil {
+		response["passwords_file_exists"] = true
+	} else {
+		response["passwords_file_exists"] = false
+	}
+	b, _ := json.Marshal(response)
+	w.Write(b)
+}
+
+func createPasswordsFileHandler(w http.ResponseWriter, r *http.Request) {
+	os.Create("passwords_file")
 }
 
 func storeHandler(w http.ResponseWriter, r *http.Request) {
