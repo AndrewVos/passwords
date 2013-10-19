@@ -32,8 +32,14 @@ func getJSON(server *httptest.Server, path string) map[string]interface{} {
 	return responseData
 }
 
-func postFormJSON(server *httptest.Server, path string, form url.Values) {
-	http.PostForm(server.URL+path, form)
+func postFormJSON(server *httptest.Server, path string, form url.Values) map[string]interface{} {
+	var responseData map[string]interface{}
+	response, _ := http.PostForm(server.URL+path, form)
+	defer response.Body.Close()
+	data, _ := ioutil.ReadAll(response.Body)
+	json.Unmarshal(data, &responseData)
+	response.Body.Close()
+	return responseData
 }
 
 func TestPasswordsFileExists(t *testing.T) {
@@ -66,33 +72,25 @@ func TestCreatePasswordsFile(t *testing.T) {
 }
 
 func TestLogin(t *testing.T) {
-	// autofill
-	// check passwordsfile exists
-	// if it doesn't create account
-	// if it does, checked logged in state
+	setup()
+
+	ts := httptest.NewServer(http.HandlerFunc(loginHandler))
+	form := url.Values{"password": {"some-password"}}
+	responseData := postFormJSON(ts, "/login", form)
+	if responseData["logged_in"] == true {
+		t.Errorf("Expected to not be logged in yet")
+	}
+
+	ts = httptest.NewServer(http.HandlerFunc(createPasswordsFileHandler))
+	form = url.Values{"password": {"some-password"}}
+	postFormJSON(ts, "/create_passwords_file", form)
+
+	ts = httptest.NewServer(http.HandlerFunc(loginHandler))
+	form = url.Values{"password": {"some-password"}}
+	responseData = postFormJSON(ts, "/login", form)
+	if responseData["logged_in"] == false {
+		t.Errorf("Expected to be logged in")
+	}
+
+	teardown()
 }
-
-func TestStoreAndSearchPassword(t *testing.T) {
-	// ts := httptest.NewServer(http.HandlerFunc(createPasswordsFileHandler))
-	// body := bytes.NewReader([]byte(`{"password": "master password"}`))
-	// http.Post(ts.URL+"/create_passwords_file", "application/json", body)
-
-	// ts = httptest.NewServer(http.HandlerFunc(storeHandler))
-	// body = bytes.NewReader([]byte(`{"site": "http://example.com", "username": "andrew", "password": "a-password"}`))
-
-	// form := url.Values{"site": {"http://example.com"}, "email": {"andrew@me.com"}, "password": {"a-passwod"}}
-	// http.PostForm(ts.URL+"/store/", form)
-
-	// ts = httptest.NewServer(http.HandlerFunc(searchHandler))
-	// response, _ := http.Get(ts.URL + "/search/?q=" + url.QueryEscape("http://example.com"))
-	// defer response.Body.Close()
-	// data, _ := ioutil.ReadAll(response.Body)
-	// var v []map[string]interface{}
-	// json.Unmarshal(data, &v)
-	// fmt.Println(v)
-}
-
-// login
-// search passwords
-// edit password
-// add passwords
