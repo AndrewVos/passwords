@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -22,7 +21,6 @@ func init() {
 	}
 	PasswordsFilePath = path.Join(usr.HomeDir, ".passwords.passwords")
 
-	fmt.Println(PasswordsFilePath)
 	http.HandleFunc("/create_passwords_file", createPasswordsFileHandler)
 	http.HandleFunc("/login", loginHandler)
 	http.HandleFunc("/logged_in", loggedInHandler)
@@ -79,7 +77,7 @@ func loggedInHandler(w http.ResponseWriter, r *http.Request) {
 func createPasswordsFileHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	encrypted := Encrypt([]byte("[]"), r.FormValue("password"))
-	err := ioutil.WriteFile(PasswordsFilePath, encrypted, 0644)
+	err := ioutil.WriteFile(PasswordsFilePath, encrypted, 0600)
 	if err != nil {
 		panic(err)
 	}
@@ -126,7 +124,7 @@ func storeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	encrypted := Encrypt(b, storedPassword)
-	err = ioutil.WriteFile(PasswordsFilePath, encrypted, 0644)
+	err = ioutil.WriteFile(PasswordsFilePath, encrypted, 0600)
 	if err != nil {
 		panic(err)
 	}
