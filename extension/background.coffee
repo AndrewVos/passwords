@@ -1,14 +1,14 @@
-filledPassword = false
+autoFilledPassword = false
 
 fill = ->
   ensureLoggedIn ->
-    self.filledPassword = true
+    self.autoFilledPassword = true
     url = "http://localhost:8080/search/?q=" + encodeURIComponent(site())
     $.getJSON url, (data) ->
       fillUsername(data.Username)
       fillPassword(data.Password)
 
-ensureLoggedIn (callback) ->
+ensureLoggedIn = (callback) ->
   $.post "http://localhost:8080/logged_in", (data) ->
     if data.logged_in
       callback()
@@ -36,6 +36,7 @@ login = ->
         Please enter your password to decrypt the passwords file
     <input id="password" type="password" value="">
     <input id="login" type="submit">
+    <span id="error" style="display:none;">Error logging in</span>
     </div>
   '
   $("body").append($(iframe))
@@ -45,9 +46,11 @@ login = ->
   frame.load ->
     frame.contents().find("#login").click ->
       url = "http://localhost:8080/login"
-      $.post url, items.lastFormSubmitted, ->
-        chrome.storage.local.remove "lastFormSubmitted"
-        $("#login-frame").hide()
+      $.post url, {"password": frame.contents().find("#password").val()} , (data) ->
+        if data.logged_in
+          frame.hide()
+        else
+          frame.contents().find("#error").show()
 
 fillUsername = (username) ->
   username_fields = [
@@ -85,7 +88,7 @@ Mousetrap.bindGlobal 'cmd+\\', (e) ->
   false
 
 $("form").submit (e) ->
-  return if self.filledPassword
+  return if self.autoFilledPassword
   if $(e.target).find("input[type='password']").length >= 1
     hash = $(e.target).serializeHash()
     hash["site"] = site()

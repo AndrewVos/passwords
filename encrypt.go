@@ -20,7 +20,7 @@ func EncryptAESCFB(dst, src, key, iv []byte) error {
 func DecryptAESCFB(dst, src, key, iv []byte) error {
 	aesBlockDecrypter, err := aes.NewCipher([]byte(key))
 	if err != nil {
-		return nil
+		return err
 	}
 	aesDecrypter := cipher.NewCFBDecrypter(aesBlockDecrypter, iv)
 	aesDecrypter.XORKeyStream(dst, src)
@@ -28,31 +28,34 @@ func DecryptAESCFB(dst, src, key, iv []byte) error {
 }
 
 func Encrypt(b []byte, password string) []byte {
-	key := generateKey(password)
-	iv := generateIV()
+	salt := generateSalt(256)
+	key := generateKey(password, salt)
+	iv := generateIV(aes.BlockSize)
+
 	encrypted := make([]byte, len(b))
 	err := EncryptAESCFB(encrypted, b, key, iv)
 	if err != nil {
 		panic(err)
 	}
-	result := make([]byte, len(iv)+len(encrypted))
+	result := []byte{}
 
-	resultIndex := 0
+	for _, i := range salt {
+		result = append(result, i)
+	}
 	for _, i := range iv {
-		result[resultIndex] = i
-		resultIndex += 1
+		result = append(result, i)
 	}
 	for _, i := range encrypted {
-		result[resultIndex] = i
-		resultIndex += 1
+		result = append(result, i)
 	}
 	return result
 }
 
 func Decrypt(b []byte, password string) ([]byte, bool) {
-	key := generateKey(password)
-	iv := b[:16]
-	encrypted := b[16:]
+	salt := b[:256]
+	iv := b[256:(256 + aes.BlockSize)]
+	key := generateKey(password, salt)
+	encrypted := b[(256 + aes.BlockSize):]
 	result := make([]byte, len(encrypted))
 	err := DecryptAESCFB(result, encrypted, key, iv)
 	if err != nil {
@@ -61,14 +64,19 @@ func Decrypt(b []byte, password string) ([]byte, bool) {
 	return result, true
 }
 
-func generateIV() []byte {
-	iv := make([]byte, aes.BlockSize)
+func generateIV(size int) []byte {
+	iv := make([]byte, size)
 	rand.Read(iv)
 	return iv
 }
 
-func generateKey(password string) []byte {
-	salt := []byte("bla bla bla")
+func generateSalt(size int) []byte {
+	iv := make([]byte, size)
+	rand.Read(iv)
+	return iv
+}
+
+func generateKey(password string, salt []byte) []byte {
 	key, err := scrypt.Key([]byte(password), salt, 16384, 8, 1, 32)
 	if err != nil {
 		panic(err)
