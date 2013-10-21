@@ -2,16 +2,27 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/user"
+	"path"
 	"strings"
 )
 
 var credentials []Credential
 var storedPassword string
+var PasswordsFilePath string
 
 func init() {
+	usr, err := user.Current()
+	if err != nil {
+		panic(err)
+	}
+	PasswordsFilePath = path.Join(usr.HomeDir, ".passwords.passwords")
+
+	fmt.Println(PasswordsFilePath)
 	http.HandleFunc("/create_passwords_file", createPasswordsFileHandler)
 	http.HandleFunc("/login", loginHandler)
 	http.HandleFunc("/logged_in", loggedInHandler)
@@ -25,7 +36,7 @@ func main() {
 }
 
 func login(password string) bool {
-	file, err := ioutil.ReadFile("passwords_file")
+	file, err := ioutil.ReadFile(PasswordsFilePath)
 	if err != nil {
 		return false
 	}
@@ -68,7 +79,7 @@ func loggedInHandler(w http.ResponseWriter, r *http.Request) {
 func createPasswordsFileHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	encrypted := Encrypt([]byte("[]"), r.FormValue("password"))
-	err := ioutil.WriteFile("passwords_file", encrypted, 0777)
+	err := ioutil.WriteFile(PasswordsFilePath, encrypted, 0644)
 	if err != nil {
 		panic(err)
 	}
@@ -87,7 +98,7 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 
 func passwordsFileExistsHandler(w http.ResponseWriter, r *http.Request) {
 	response := map[string]interface{}{}
-	if _, err := os.Stat("passwords_file"); err == nil {
+	if _, err := os.Stat(PasswordsFilePath); err == nil {
 		response["passwords_file_exists"] = true
 	} else {
 		response["passwords_file_exists"] = false
@@ -115,7 +126,7 @@ func storeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	encrypted := Encrypt(b, storedPassword)
-	err = ioutil.WriteFile("passwords_file", encrypted, 0777)
+	err = ioutil.WriteFile(PasswordsFilePath, encrypted, 0644)
 	if err != nil {
 		panic(err)
 	}

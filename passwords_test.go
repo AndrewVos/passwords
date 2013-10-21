@@ -13,18 +13,11 @@ import (
 var server *httptest.Server
 
 func setup() {
-	removePasswordsFile()
+	PasswordsFilePath = "passwords_file"
+	os.Remove(PasswordsFilePath)
 	storedPassword = ""
 	credentials = nil
 	server = httptest.NewServer(nil)
-}
-
-func teardown() {
-	removePasswordsFile()
-}
-
-func removePasswordsFile() {
-	os.Remove("passwords_file")
 }
 
 func getJSON(path string) map[string]interface{} {
@@ -55,12 +48,11 @@ func TestPasswordsFileExists(t *testing.T) {
 		t.Errorf("Expected passwords_file_exists = false")
 	}
 
-	os.Create("passwords_file")
+	os.Create(PasswordsFilePath)
 	responseData = getJSON("/passwords_file_exists")
 	if responseData["passwords_file_exists"] != true {
 		t.Errorf("Expected passwords_file_exists = true")
 	}
-	teardown()
 }
 
 func TestCreatePasswordsFile(t *testing.T) {
@@ -68,10 +60,9 @@ func TestCreatePasswordsFile(t *testing.T) {
 
 	form := url.Values{"password": {"some-password"}}
 	postFormJSON("/create_passwords_file", form)
-	if _, err := os.Stat("passwords_file"); err != nil {
+	if _, err := os.Stat(PasswordsFilePath); err != nil {
 		t.Errorf("Expected passwords_file to be created")
 	}
-	teardown()
 }
 
 func TestLogin(t *testing.T) {
@@ -95,8 +86,6 @@ func TestLogin(t *testing.T) {
 	if v, ok := responseData["logged_in"]; v == false || ok == false {
 		t.Errorf("Expected to be logged in")
 	}
-
-	teardown()
 }
 
 func TestLoginWithInvalidPassword(t *testing.T) {
@@ -113,8 +102,6 @@ func TestLoginWithInvalidPassword(t *testing.T) {
 	if v, ok := response["logged_in"]; v == true || ok == false {
 		t.Errorf("Expected to not be logged in")
 	}
-
-	teardown()
 }
 
 func TestLoggedIn(t *testing.T) {
@@ -133,8 +120,6 @@ func TestLoggedIn(t *testing.T) {
 	if v, ok := response["logged_in"]; v == false || ok == false {
 		t.Errorf("Expected to be logged in")
 	}
-
-	teardown()
 }
 
 func TestStoreAndSearchPassword(t *testing.T) {
@@ -163,6 +148,4 @@ func TestStoreAndSearchPassword(t *testing.T) {
 	if response["Password"] != "site password" {
 		t.Errorf("wrong password")
 	}
-
-	teardown()
 }
