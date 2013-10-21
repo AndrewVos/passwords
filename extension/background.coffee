@@ -13,9 +13,9 @@ ensureLoggedIn = (callback) ->
     if data.logged_in
       callback()
     else
-      login()
+      login(callback)
 
-login = ->
+login = (callback) ->
   iframe = '
     <iframe id="login-frame" srcdoc="" allowtransparency="true" scrolling="no" style="position: absolute; z-index:99999999; border: 0; width: 100%; height: 50px; top: 0;">
     </iframe>
@@ -49,6 +49,7 @@ login = ->
       $.post url, {"password": frame.contents().find("#password").val()} , (data) ->
         if data.logged_in
           frame.hide()
+          callback()
         else
           frame.contents().find("#error").show()
 
@@ -123,10 +124,11 @@ chrome.storage.local.get "lastFormSubmitted", (items) ->
     frame.attr("srcdoc", popup)
 
     clickYes = ->
-      url = "http://localhost:8080/store"
-      $.post url, items.lastFormSubmitted, ->
-        chrome.storage.local.remove "lastFormSubmitted"
-        $("#passwords-frame").hide()
+      ensureLoggedIn ->
+        url = "http://localhost:8080/store"
+        $.post url, items.lastFormSubmitted, ->
+          chrome.storage.local.remove "lastFormSubmitted"
+          $("#passwords-frame").hide()
     clickNo = ->
       chrome.storage.local.remove "lastFormSubmitted"
       $("#passwords-frame").hide()
